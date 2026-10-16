@@ -89,38 +89,24 @@ public_portfolio/
 ├── README.md
 ├── backend-core-samples/
 │   ├── core/
-│   │   ├── event_bus.rs                 # 型付き Pub/Sub
-│   │   ├── crypto_resilient.rs          # 鍵なしでも落とさない AES
-│   │   ├── device_key_wrap.rs           # X25519 master-key wrap/unwrap
-│   │   └── db_wal.rs                    # WAL / FK / migrate
-│   ├── http/build_router.rs             # Axum ルート合成
-│   ├── sync/
-│   │   ├── access_middleware.rs         # Tailscale + Bearer
-│   │   ├── lww_record.rs                # SyncRecord + LWW
-│   │   └── evaluate_sync.rs             # Insert/Update/Conflict 判定
+│   │   ├── event_bus.rs / event_subscriber_runtime.rs
+│   │   ├── error.rs                     # Axum IntoResponse（409 含む）
+│   │   ├── crypto_resilient.rs / device_key_wrap.rs / db_wal.rs
+│   ├── http/build_router.rs             # CORS + Trace + middleware + bind
+│   ├── sync/                            # Tailscale gate / LWW / evaluate
 │   └── domains/
-│       ├── ai/                          # Gemini クライアント・ストリーム
-│       ├── task/zero_ms_complete.rs     # 完了→Pub→200
-│       ├── reward/
-│       │   ├── gacha_listener.rs        # TaskCompleted→ガチャ
-│       │   └── sse_stream.rs            # RewardDropped→SSE
-│       ├── knowledge/
-│       │   ├── domain_ai_handler.rs     # ドメイン駆動 AI
-│       │   └── mentions_rebuild.rs      # 双方向 Mentions
-│       ├── sleep/                       # 0ms停止・朝ストリーム・TTS
-│       └── cross_domain/
-│           └── shopping_bus_flow.rs     # 在庫↔タスク連動
+│       ├── task/models.rs + services.rs # sqlx CRUD + ユニットテスト
+│       ├── sleep/models.rs + services.rs# アラーム CRUD + 午前ガード + テスト
+│       ├── reward/gacha_math.rs + gacha_services.rs  # 曲線・予算・sqlx
+│       ├── task/ai_handler.rs           # 優先度 AI（EventBus）
+│       ├── ai/ · knowledge/ · sleep(stream) · cross_domain/
 ├── frontend-sync-samples/
-│   ├── dexie/offlineDb.ts               # Outbox
-│   ├── api/offlineFirstApi.ts           # オフライン縁
-│   ├── sync/                            # syncPolicy + LWW apply
-│   ├── crypto/unwrapMasterKey.ts        # WebCrypto unwrap
-│   └── layout/layoutMode.ts             # Desktop/Mobile/Resident/Taskbar
-├── voice-server-samples/
-│   └── WavPlayQueue.cs                  # 書き出しと独立した再生キュー
-└── tests-samples/
-    ├── lww_conflict_tests.rs            # LWW 契約テスト
-    └── reward_event_tests.rs            # EventBus 結合テスト
+│   ├── dexie/offlineDb.ts               # フルスキーマ + Outbox
+│   ├── api/offlineFirstApi.ts           # キャッシュ / Outbox / 楽観更新
+│   ├── sync/lwwApply.ts                 # 多ドメイン LWW
+│   ├── sync/syncPolicy.ts · crypto/ · layout/
+├── voice-server-samples/WavPlayQueue.cs
+└── tests-samples/                       # LWW / EventBus 契約テスト
 ```
 
 サーバーPC向け管理ツール（WinForms）は運用寄りのため、本サンプル集には含めていません。

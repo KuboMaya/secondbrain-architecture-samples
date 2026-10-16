@@ -8,7 +8,8 @@ const MULTI_KEY = "secondbrain.multi_device_sync";
 const API_BASE_KEY = "secondbrain.api_base";
 const AUTH_TOKEN_KEY = "secondbrain.sync_auth_token";
 
-const DEFAULT_API_BASE = "http://127.0.0.1:3000/api";
+/** Placeholder — Tailscale CGNAT style peer (not a real host). */
+const DEFAULT_API_BASE = "http://100.x.x.x:3000/api";
 
 function envApiBase(): string {
   try {
