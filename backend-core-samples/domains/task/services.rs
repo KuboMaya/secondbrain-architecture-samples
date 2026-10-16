@@ -526,4 +526,105 @@ mod tests {
         .await;
         assert!(matches!(err, Err(AppError::Validation(_))));
     }
+
+    #[tokio::test]
+    async fn soft_deleted_task_hidden_from_list_and_get() {
+        let pool = setup_pool().await;
+        let t = create_task(
+            &pool,
+            CreateTaskRequest {
+                title: "temp".into(),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        delete_task(&pool, &t.id).await.unwrap();
+        assert!(list_tasks(&pool).await.unwrap().is_empty());
+        assert!(matches!(
+            get_task(&pool, &t.id).await,
+            Err(AppError::NotFound(_))
+        ));
+    }
+
+    #[tokio::test]
+    async fn list_tasks_for_date_filters_done_and_due() {
+        let pool = setup_pool().await;
+        create_task(
+            &pool,
+            CreateTaskRequest {
+                title: "due today".into(),
+                due_date: Some("2026-10-16".into()),
+                priority: Some(3),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        let done = create_task(
+            &pool,
+            CreateTaskRequest {
+                title: "already done".into(),
+                due_date: Some("2026-10-16".into()),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        complete_task(&pool, &EventBus::default(), &done.id)
+            .await
+            .unwrap();
+        create_task(
+            &pool,
+            CreateTaskRequest {
+                title: "other day".into(),
+                due_date: Some("2026-10-17".into()),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+
+        let open = list_tasks_for_date(&pool, "2026-10-16").await.unwrap();
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0].title, "due today");
+        assert_eq!(open[0].priority, 3);
+    }
+
+    #[test]
+    fn summarize_today_with_items() {
+        let schedules = [Schedule {
+            id: "s1".into(),
+            version: 1,
+            created_at: String::new(),
+            updated_at: String::new(),
+            deleted_at: None,
+            title: "会議".into(),
+            start_time: String::new(),
+            end_time: String::new(),
+            is_all_day: 0,
+            recurrence_rule: None,
+            location: None,
+            notes: None,
+        }];
+        let tasks = [Task {
+            id: "t1".into(),
+            version: 1,
+            created_at: String::new(),
+            updated_at: String::new(),
+            deleted_at: None,
+            title: "報告書".into(),
+            status: "todo".into(),
+            priority: 1,
+            due_date: None,
+            parent_id: None,
+            tags: "[]".into(),
+            reward_multiplier: 1.0,
+        }];
+        let (summary, s_titles, t_titles) = summarize_today("2026-10-16", &schedules, &tasks);
+        assert!(summary.contains("会議"));
+        assert!(summary.contains("報告書"));
+        assert_eq!(s_titles, vec!["会議".to_string()]);
+        assert_eq!(t_titles, vec!["報告書".to_string()]);
+    }
 }

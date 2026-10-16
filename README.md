@@ -106,7 +106,11 @@ public_portfolio/
 │   ├── sync/lwwApply.ts                 # 多ドメイン LWW
 │   ├── sync/syncPolicy.ts · crypto/ · layout/
 ├── voice-server-samples/WavPlayQueue.cs
-└── tests-samples/                       # LWW / EventBus 契約テスト
+└── tests-samples/                       # 本番 tests/ 相当の厚い契約・境界・MC/DC
+    ├── common/test_harness.rs
+    ├── lww_conflict_tests.rs
+    ├── reward_bus_integration.rs
+    └── README.md
 ```
 
 サーバーPC向け管理ツール（WinForms）は運用寄りのため、本サンプル集には含めていません。
